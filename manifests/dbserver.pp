@@ -13,12 +13,18 @@ class mysql_5 {
   
   service { "mysql":
     ensure => running, 
-    require => Package["mysql-server-5.1"]
+    require => Package["mysql-server-5.1"],
+    notify => Exec['create-db-user']
   }
 
-  exec { "create-db-schema-and-user":
-    command => "/usr/bin/mysql -uroot -p -e \"drop database if exists testapp; create database testapp; create user dbuser@'%' identified by 'dbuser'; grant all on testapp.* to dbuser@'%'; flush privileges;\"",
-    require => Service["mysql"]
+  exec { "create-db":
+    command => "/usr/bin/mysql -uroot -p -e \"create database testapp;\"; true",
+    require => Service["mysql"],
+  }
+
+  exec { "create-db-user":
+    command => "/usr/bin/mysql -uroot -p -e \"create user dbuser@'%' identified by 'dbuser'; grant all on testapp.* to dbuser@'%'; flush privileges;\"; true",
+    require => Exec["create-db"],
   }
 
   file { "/etc/mysql/my.cnf":
